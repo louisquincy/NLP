@@ -45,7 +45,7 @@ for sent in doc.sents:
         # agree1 - Если хотя бы одно из слов является существительным или прилагательным = True.
         agree1 = ( parsed_word1.tag.POS in ( 'NOUN', 'ADJF' ) ) or ( parsed_word2.tag.POS in ( 'NOUN', 'ADJF' ) )
 
-        # Если хотя бы у одного из слов неопределен род или у двух слов совпадает число или у двух слов совпадает род = True.
+        # Если хотя бы у одного из слов неопределен род или у двух слов множественное число или у двух слов совпадает род = True.
         agree2 = ( parsed_word1.tag.gender is None or parsed_word2.tag.gender is None or
                  ( parsed_word1.tag.number == 'plur' and parsed_word2.tag.number == 'plur' ) or
                    parsed_word1.tag.gender == parsed_word2.tag.gender )
