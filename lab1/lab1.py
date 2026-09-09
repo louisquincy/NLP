@@ -1,7 +1,8 @@
 import nltk
 import ssl
-from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
+from pymorphy_spacy_disambiguation.disamb import Disambiguator
+import spacy
 import pymorphy3
 
 # Обход ошибки для MacOS
@@ -10,57 +11,49 @@ try:
 except AttributeError:
     pass
 
-# Запуск нлтк и анализатора
 nltk.download('punkt')
 nltk.download('punkt_tab')
-morph_analyzer = pymorphy3.MorphAnalyzer()
+analyzer = pymorphy3.MorphAnalyzer()
+m_spacy = spacy.load("ru_core_news_sm")
 
-# Чтение файла с текстом
-with open("/Users/salihshulaikin/code/nlp/text.txt", "r", encoding="utf-8") as file:
+# Дизамбигуатор без передаваемого в него анализатора по умолчанию работает на украинском словаре.
+disambiguator = Disambiguator(analyzer)
+
+with open("/Users/salihshulaikin/code/nlp/lab1/text.txt", "r", encoding="utf-8") as file:
     text = file.read()
 
-# Разбиение текста на предложения, считывает до ',','.','?','!'
-# и бьет текст
 sentences = sent_tokenize(text, language='russian')
-print(sentences)
+doc = m_spacy(text)
 
-# Бьем каждое предложение на отдельные токены, токены одного 
-# предложения помещаем в отдельный список, после помещаем все
-# списки в финальный список. imediate - для промежуточных действий.
-text_token = []
-for sentence in sentences:
-    imediate = word_tokenize(sentence)
-    imediate_2 = []
-    for token in imediate:
-        # Избавляемся от всех знаков препинания
-        if token.isalpha():
-            imediate_2.append(token)
-    text_token.append(imediate_2)
-    
-print(text_token)
-
-# Если скажут, что не нужно было усложнять, весь текст в одном списке
-# text_token = word_tokenize(text, language='russian')
-# print(text_token)
 
 # В первом цикле берем каждое предложение, во втором каждое слово
-# parse() - возвращает список всех вариантов его грам.разбора
-# На нулевой позиции наиболее вероятный вариант
-for sent in text_token:
-    for token in range(len(sent)-1):
-        word1 = sent[token]
-        word2 = sent[token+1]
-        parsed_word1 = morph_analyzer.parse(word1)[0]
-        parsed_word2 = morph_analyzer.parse(word2)[0]
-# Первая проверка, проверяем пару слов на соответствие частям речи по заданию
-# Вторая проверка по согласованности характеристик по заданию
-        agree1 = (parsed_word1.tag.POS in ('NOUN', 'ADJF')) or (parsed_word2.tag.POS in ('NOUN', 'ADJF'))
-        agree2 = (parsed_word1.tag.gender == parsed_word2.tag.gender and
-                parsed_word1.tag.number == parsed_word2.tag.number and
-                parsed_word1.tag.case == parsed_word2.tag.case)
-# Нерешенные проблемы:
-# 1. В словах во множественном числе tag.gender возвращает None
-# 2. Сущ. и прил. которые невозможно однозначно проанализировать
-# Например: пальто, красив, пИла пилА. parse()[0] - вероятный, но не лучший вариант
-        if agree1 and agree2:
-            print(word1, word2, "|", parsed_word1.normal_form, parsed_word2.normal_form)
+# Дизамбигуатор - помогает решить вопросы неопределенности.
+# Самостоятельно выбирает слово из возвращаемого списка анализатора.
+
+for sent in doc.sents:
+    #  Избавляемся от знаков препинания.
+    tokens = [token for token in sent if token.is_alpha]
+    for i in range(len(tokens)-1):
+        word1 = tokens[i]
+        word2 = tokens[i+1]
+
+        parsed_word1 = disambiguator.get_with_disambiguation(word1)
+        parsed_word2 = disambiguator.get_with_disambiguation(word2)
+
+        if parsed_word1 is None or parsed_word2 is None:
+            continue
+        # agree1 - Если хотя бы одно из слов является существительным или прилагательным = True.
+        agree1 = ( parsed_word1.tag.POS in ( 'NOUN', 'ADJF' ) ) or ( parsed_word2.tag.POS in ( 'NOUN', 'ADJF' ) )
+
+        # Если хотя бы у одного из слов неопределен род или у двух слов совпадает число или у двух слов совпадает род = True.
+        agree2 = ( parsed_word1.tag.gender is None or parsed_word2.tag.gender is None or
+                 ( parsed_word1.tag.number == 'plur' and parsed_word2.tag.number == 'plur' ) or
+                   parsed_word1.tag.gender == parsed_word2.tag.gender )
+
+        # Если у двух слов совпадает число и их падеж неопределен или совпадает = True.
+        agree3 = ( parsed_word1.tag.number == parsed_word2.tag.number and
+                 ( parsed_word1.tag.case is None or parsed_word2.tag.case is None or
+                   parsed_word1.tag.case == parsed_word2.tag.case ) )
+
+        if agree1 and agree2 and agree3:
+            print( word1.text, word2.text, "|", parsed_word1.normal_form, parsed_word2.normal_form )
