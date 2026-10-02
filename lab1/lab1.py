@@ -12,7 +12,10 @@ m_spacy = spacy.load("ru_core_news_sm")
 # Дизамбигуатор без передаваемого в него анализатора по умолчанию работает на украинском словаре.
 disambiguator = Disambiguator(analyzer)
 
-with open("/Users/salihshulaikin/code/nlp/lab1/text.txt", "r", encoding="utf-8") as file:
+BASE_DIR = Path(__file__).resolve().parent
+file_path = BASE_DIR / "text.txt"
+
+with open(file_path, "r", encoding="utf-8") as file:
     text = file.read()
 
 sentences = sent_tokenize(text, language='russian')
