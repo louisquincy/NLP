@@ -1,15 +1,8 @@
 import nltk
-import ssl
 from nltk.tokenize import sent_tokenize
 from pymorphy_spacy_disambiguation.disamb import Disambiguator
 import spacy
 import pymorphy3
-
-# Обход ошибки для MacOS
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
 
 nltk.download('punkt')
 nltk.download('punkt_tab')
