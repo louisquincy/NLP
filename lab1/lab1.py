@@ -23,14 +23,13 @@ with open("/Users/salihshulaikin/code/nlp/lab1/text.txt", "r", encoding="utf-8")
     text = file.read()
 
 sentences = sent_tokenize(text, language='russian')
-doc = m_spacy(text)
-
 
 # В первом цикле берем каждое предложение, во втором каждое слово
 # Дизамбигуатор - помогает решить вопросы неопределенности.
 # Самостоятельно выбирает слово из возвращаемого списка анализатора.
 
-for sent in doc.sents:
+for sentence in sentences:
+    sent = m_spacy(sentence)
     #  Избавляемся от знаков препинания.
     tokens = [token for token in sent if token.is_alpha]
     for i in range(len(tokens)-1):
