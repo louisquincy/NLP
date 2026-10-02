@@ -3,6 +3,7 @@ from nltk.tokenize import sent_tokenize
 from pymorphy_spacy_disambiguation.disamb import Disambiguator
 import spacy
 import pymorphy3
+from pathlib import Path
 
 nltk.download('punkt')
 nltk.download('punkt_tab')
