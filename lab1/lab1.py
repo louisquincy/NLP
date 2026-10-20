@@ -1,6 +1,5 @@
 import nltk
 from nltk.tokenize import sent_tokenize
-from pymorphy_spacy_disambiguation.disamb import Disambiguator
 import spacy
 import pymorphy3
 from pathlib import Path
@@ -10,8 +9,22 @@ nltk.download('punkt_tab')
 analyzer = pymorphy3.MorphAnalyzer()
 m_spacy = spacy.load("ru_core_news_sm")
 
-# Дизамбигуатор без передаваемого в него анализатора по умолчанию работает на украинском словаре.
-disambiguator = Disambiguator(analyzer)
+CASES = {'Nom': {'nomn'}, 'Gen': {'gent', 'gen1', 'gen2'}, 'Dat': {'datv'},
+         'Acc': {'accs', 'acc2'}, 'Loc': {'loct', 'loc1', 'loc2'}, 'Ins': {'ablt'}, 'Voc': {'voct'}}
+NUMBERS = {'Sing': 'sing', 'Plur': 'plur'}
+PROPER = {'Name', 'Surn', 'Patr', 'Geox', 'Orgn'}
+
+def best_parse(token):
+    number = NUMBERS.get(next(iter(token.morph.get('Number')), None))
+    cases = CASES.get(next(iter(token.morph.get('Case')), None), set())
+    proper_ok = token.is_title and not token.is_sent_start
+
+    def key(p):
+        return (proper_ok or not (PROPER & set(p.tag.grammemes)),
+                p.tag.number == number,        
+                p.tag.case in cases)
+
+    return max(analyzer.parse(token.text), key=key, default=None)
 
 BASE_DIR = Path(__file__).resolve().parent
 file_path = BASE_DIR / "text.txt"
@@ -33,8 +46,8 @@ for sentence in sentences:
         word1 = tokens[i]
         word2 = tokens[i+1]
         
-        parsed_word1 = disambiguator.get_with_disambiguation(word1)
-        parsed_word2 = disambiguator.get_with_disambiguation(word2)
+        parsed_word1 = best_parse(word1)
+        parsed_word2 = best_parse(word2)
 
         if parsed_word1 is None or parsed_word2 is None:
             continue
