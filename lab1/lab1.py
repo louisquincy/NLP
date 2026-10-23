@@ -14,6 +14,13 @@ CASES = {'Nom': {'nomn'}, 'Gen': {'gent', 'gen1', 'gen2'}, 'Dat': {'datv'},
 NUMBERS = {'Sing': 'sing', 'Plur': 'plur'}
 PROPER = {'Name', 'Surn', 'Patr', 'Geox', 'Orgn'}
 
+BASE_DIR = Path(__file__).resolve().parent
+file_path = BASE_DIR / "text.txt"
+
+with open(file_path, "r", encoding="utf-8") as file:
+    text = file.read()
+
+
 def best_parse(token):
     number = NUMBERS.get(next(iter(token.morph.get('Number')), None))
     cases = CASES.get(next(iter(token.morph.get('Case')), None), set())
@@ -26,21 +33,11 @@ def best_parse(token):
 
     return max(analyzer.parse(token.text), key=key, default=None)
 
-BASE_DIR = Path(__file__).resolve().parent
-file_path = BASE_DIR / "text.txt"
-
-with open(file_path, "r", encoding="utf-8") as file:
-    text = file.read()
 
 sentences = sent_tokenize(text, language='russian')
 
-# В первом цикле берем каждое предложение, во втором каждое слово
-# Дизамбигуатор - помогает решить вопросы неопределенности.
-# Самостоятельно выбирает слово из возвращаемого списка анализатора.
-
 for sentence in sentences:
     sent = m_spacy(sentence)
-    #  Избавляемся от знаков препинания.
     tokens = [token for token in sent if token.is_alpha]
     for i in range(len(tokens)-1):
         word1 = tokens[i]
@@ -51,6 +48,7 @@ for sentence in sentences:
 
         if parsed_word1 is None or parsed_word2 is None:
             continue
+
         # agree1 - ищем пары "NOUN NOUN" и "ADJF NOUN" и "NOUN ADJF" и "ADJF ADJF"
         agree1 = ( parsed_word1.tag.POS in ( 'NOUN', 'ADJF' ) ) and ( parsed_word2.tag.POS in ( 'NOUN', 'ADJF' ) )
 
