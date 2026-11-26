@@ -6,7 +6,6 @@ neg = ["движение_NOUN", "запчасть_NOUN"]
 targets = ("стамеска", "колесо")
 word2vec = gensim.models.KeyedVectors.load_word2vec_format("cbow.txt", binary=False)
 
-# проверка, что все слова есть в модели
 for w in pos + neg + [t + "_NOUN" for t in targets]:
     if w not in word2vec.key_to_index:
         print("Нет в модели:", w)
@@ -26,3 +25,4 @@ for w, sim in dist:
     print(f"{count:2d}. {word} ({sim:.4f}){mark}")
     if count == 10:
         break
+    
