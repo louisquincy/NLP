@@ -4,7 +4,6 @@ from transformers import (
     LogitsProcessor, LogitsProcessorList,
 )
 
-
 def word_sequences(tokenizer, words, upper=False):
     seqs = set()
     for w in words:
@@ -18,15 +17,11 @@ def word_sequences(tokenizer, words, upper=False):
                     seqs.add(ids)
     return seqs
 
-
 def ends_with(row, prefix):
     return len(prefix) == 0 or (len(row) >= len(prefix)
                                 and row[-len(prefix):] == list(prefix))
 
-
 class PixelFanLogitsProcessor(LogitsProcessor):
-    """Обожает Google Pixel: давление растёт, пока бренд не упомянут,
-    после упоминания - пауза. Презирает iPhone: любое упоминание запрещено."""
 
     def __init__(self, tokenizer, love_words, hate_words,
                  base_boost=1.0, growth=0.3, max_boost=6.0,
@@ -38,8 +33,8 @@ class PixelFanLogitsProcessor(LogitsProcessor):
         self.max_boost = max_boost
         self.finish_bonus = finish_bonus
         self.cooldown = cooldown
-        self.steps = None   # шагов без Pixel
-        self.pause = None   # сколько шагов ещё не поощрять
+        self.steps = None
+        self.pause = None
 
     def __call__(self, input_ids: torch.LongTensor,
                  scores: torch.FloatTensor) -> torch.FloatTensor:
@@ -73,7 +68,6 @@ class PixelFanLogitsProcessor(LogitsProcessor):
                     scores[b, seq[-1]] = -float("inf")
         return scores
 
-
 love_words = ["Google Pixel", "Pixel", "Pixel Buds", "Android"]
 hate_words = ["iPhone", "iPhones", "Apple", "iOS", "Siri", "AirPods",
               "iMessage", "iPad", "iPads", "iPod", "MacBook"]
@@ -86,7 +80,6 @@ model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
 prompt = "My favorite smartphone is the"
 inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
-
 def generate(logits_processor=None, seed=3):
     torch.manual_seed(seed)
     out = model.generate(
@@ -96,7 +89,6 @@ def generate(logits_processor=None, seed=3):
         pad_token_id=tokenizer.eos_token_id,
     )
     return tokenizer.decode(out[0], skip_special_tokens=True)
-
 
 print("=== Без процессора ===")
 print(generate())
