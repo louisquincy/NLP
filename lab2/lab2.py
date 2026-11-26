@@ -1,10 +1,9 @@
 import re
 import gensim
 
-pos = ["инструмент_NOUN", "транспорт_NOUN"]
-neg = ["движение_NOUN"]
-targets = ("стамеска", "колесо")   # если в модели «стомеска», замените
-
+pos = ["долото_NOUN", "шина_NOUN", "столяр_NOUN", "автомобиль_NOUN", "спица_NOUN"]
+neg = ["движение_NOUN", "запчасть_NOUN"]
+targets = ("стамеска", "колесо")
 word2vec = gensim.models.KeyedVectors.load_word2vec_format("cbow.txt", binary=False)
 
 # проверка, что все слова есть в модели
