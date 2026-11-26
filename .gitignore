@@ -34,3 +34,5 @@ Thumbs.db
 
 # Логи и временные файлы
 *.log
+
+lab2/cbow.txt
