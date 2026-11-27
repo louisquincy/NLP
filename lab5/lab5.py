@@ -84,15 +84,15 @@ def generate(logits_processor=None, seed=3):
     torch.manual_seed(seed)
     out = model.generate(
         **inputs, max_new_tokens=100,
-        do_sample=True, temperature=0.9,
+        do_sample=True, temperature=0.01,
         logits_processor=logits_processor,
         pad_token_id=tokenizer.eos_token_id,
     )
     return tokenizer.decode(out[0], skip_special_tokens=True)
 
-print("=== Без процессора ===")
+print("Без процессора")
 print(generate())
 
 processor = PixelFanLogitsProcessor(tokenizer, love_words, hate_words)
-print("\n=== С процессором «Фанат Pixel» ===")
+print("\n С процессором «Фанат Pixel»")
 print(generate(LogitsProcessorList([processor])))
